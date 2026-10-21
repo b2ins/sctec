@@ -3,11 +3,18 @@
 import sys
 
 from funcoes import (
+    aplicar_datas,
     aplicar_padronizacao_textual,
+    aplicar_validacao_numerica,
     caminho_csv_padrao,
+    explorar_contagens,
+    investigar_entrega,
     ler_csv,
+    resumir_problemas_numericos,
     resumir_textos,
     selecionar_amostra,
+    texto_descoberta_canal,
+    texto_descoberta_periodo,
 )
 
 # Colunas mostradas na amostra. O DataFrame conserva todas as outras.
@@ -92,6 +99,137 @@ def exibir_textos(dados) -> None:
     print(f"  Canais não reconhecidos: {resumo['canais_nao_reconhecidos']}")
 
 
+def _rotulo_motivo(motivo: str) -> str:
+    nomes = {
+        "ausente": "ausente",
+        "nao_positivo": "não é maior que zero",
+        "nao_inteiro": "não é inteiro",
+        "negativo": "negativo",
+        "nao_numerico": "não numérico",
+        "": "ok",
+    }
+    if motivo in nomes:
+        return nomes[motivo]
+    return motivo
+
+
+def exibir_numericos(dados) -> None:
+    """Informa problemas por campo e o total de pedidos, sem somar os dois."""
+    resumo = resumir_problemas_numericos(dados)
+    print()
+    print("Validação numérica")
+    print(f"  Linhas que seguem no processamento: {resumo['linhas']}")
+    print(f"  Problemas em quantidade: {resumo['problemas_quantidade']}")
+    for motivo, quantidade in resumo["motivos_quantidade"].items():
+        print(f"    {_rotulo_motivo(motivo)}: {quantidade}")
+    print(f"  Problemas em preco_unitario: {resumo['problemas_preco']}")
+    for motivo, quantidade in resumo["motivos_preco"].items():
+        print(f"    {_rotulo_motivo(motivo)}: {quantidade}")
+    print(
+        "  Pedidos com problema nos dois campos: "
+        f"{resumo['pedidos_com_os_dois']}"
+    )
+    print(
+        "  Pedidos afetados (união, sem somar os campos): "
+        f"{resumo['pedidos_afetados']}"
+    )
+    print("  Exemplos marcados, com o valor original preservado:")
+    for exemplo in resumo["exemplos"]:
+        print(
+            "    pedido "
+            f"{exemplo['pedido_id']}: quantidade="
+            f"{_entre_colchetes(exemplo['quantidade'])} "
+            f"({_rotulo_motivo(exemplo['motivo_quantidade'])}), "
+            f"preco_unitario="
+            f"{_entre_colchetes(exemplo['preco_unitario'])} "
+            f"({_rotulo_motivo(exemplo['motivo_preco'])})"
+        )
+
+
+def exibir_regras_e_exploracao(dados) -> None:
+    """Mostra datas, a hipótese de entrega e as duas descobertas."""
+    entrega = investigar_entrega(dados)
+    contagens = explorar_contagens(dados)
+
+    print()
+    print("Datas de venda")
+    print(
+        "  Inválidas ou vazias: "
+        f"{contagens['excluidos_data']}"
+    )
+    print("  Conversões válidas (texto original preservado):")
+    for exemplo in contagens["exemplos_data_valida"]:
+        print(
+            f"    pedido {exemplo['pedido_id']}: "
+            f"{_entre_colchetes(exemplo['data_venda'])} -> "
+            f"{exemplo['data_venda_br']} "
+            f"(ano {exemplo['ano']}, mês {exemplo['mes']}, "
+            f"dia {exemplo['dia']}, hora {exemplo['hora']})"
+        )
+    print("  Exemplos inválidos, sem troca pela data de hoje:")
+    for exemplo in contagens["exemplos_data_invalida"]:
+        print(
+            f"    pedido {exemplo['pedido_id']}: "
+            f"{_entre_colchetes(exemplo['data_venda'])}"
+        )
+
+    print()
+    print(f"Total de cancelados: {entrega['cancelados']}")
+    if entrega["hipotese_verdadeira"]:
+        conclusao = "verdadeira nesta base"
+    else:
+        conclusao = "falsa nesta base"
+    print(
+        "Hipótese: todo pedido com data_entrega vazia tem status Cancelado. "
+        f"Resultado: {conclusao}."
+    )
+    print(
+        "  Sem entrega e cancelados: "
+        f"{entrega['sem_entrega_cancelado']}"
+    )
+    print(
+        "  Sem entrega e com outro status: "
+        f"{entrega['sem_entrega_outro_status']}"
+    )
+    print(
+        "  Cancelados que têm data de entrega: "
+        f"{entrega['cancelados_com_entrega']}"
+    )
+    print("  Até três contraexemplos:")
+    if len(entrega["exemplos_contraexemplo"]) == 0:
+        print("    nenhum")
+    for exemplo in entrega["exemplos_contraexemplo"]:
+        print(
+            f"    pedido {exemplo['pedido_id']}: status "
+            f"{exemplo['status_pedido']}, produto {exemplo['produto']}, "
+            f"canal {_entre_colchetes(exemplo['canal_venda'])}, "
+            f"data_venda {_entre_colchetes(exemplo['data_venda'])}, "
+            "data_entrega (vazia)"
+        )
+
+    print()
+    print(
+        "Pedidos por canal (todos os status; canal não reconhecido fica de fora)"
+    )
+    print(f"  Excluídos: {contagens['excluidos_canal']}")
+    for canal in sorted(contagens["por_canal"]):
+        print(f"  {canal}: {contagens['por_canal'][canal]}")
+
+    print()
+    print(
+        "Pedidos por ano-mês (todos os status; data inválida ou vazia fica de fora)"
+    )
+    print(f"  Excluídos: {contagens['excluidos_data']}")
+    for periodo in sorted(contagens["por_ano_mes"]):
+        print(f"  {periodo}: {contagens['por_ano_mes'][periodo]}")
+
+    print()
+    print("Descobertas")
+    print(texto_descoberta_canal(contagens))
+    print()
+    print(texto_descoberta_periodo(contagens))
+
+
 def main() -> None:
     configurar_saida()
     caminho = caminho_csv_padrao()
@@ -100,6 +238,10 @@ def main() -> None:
     exibir_leitura(dados)
     dados = aplicar_padronizacao_textual(dados)
     exibir_textos(dados)
+    dados = aplicar_validacao_numerica(dados)
+    exibir_numericos(dados)
+    dados = aplicar_datas(dados)
+    exibir_regras_e_exploracao(dados)
 
 
 if __name__ == "__main__":

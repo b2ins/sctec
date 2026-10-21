@@ -32,6 +32,22 @@ A contagem trata os dois grupos em separado:
 
 `canal_venda` também perde espaço nas pontas e espaço repetido. Os únicos valores aceitos depois da regra são `Mercado`, `Loja física` e `Web`. `loja fisica`, sem acento, entra em Loja física. Qualquer outro texto fica sem canal reconhecido e não ganha um nome inventado.
 
+## Regras de quantidade e preço
+
+`quantidade` é válida quando o texto é um inteiro maior que zero. Vazio, decimal, zero e número negativo ficam marcados. O valor `-1` encontrado na base não é substituído.
+
+`preco_unitario` é válido quando está preenchido e é maior ou igual a zero. Vazio não vira zero. Preço negativo também seria marcado. O ponto é o separador decimal do arquivo.
+
+O programa conta os problemas de cada campo e, à parte, os pedidos afetados. Esse total é a união dos dois campos. Somar as duas contagens repetiria um pedido com falha nos dois. A linha permanece no DataFrame: o erro não encerra o processamento e não apaga o texto original.
+
+## Regras de data e de entrega
+
+`data_venda` passa por `datetime.strptime` no formato `aaaa-mm-dd hh:mm:ss`. O texto original fica na coluna. Quando a conversão funciona, o programa extrai ano, mês, dia e hora e monta `dd/mm/aaaa` com `strftime`. Data vazia ou em outro formato fica marcada, o laço continua e a data de hoje não ocupa o lugar.
+
+`data_entrega` só é observada quanto ao vazio. A hipótese é que todo pedido sem essa data tem `status_pedido` igual a `Cancelado`, comparado depois de `strip()`. Um contraexemplo torna a hipótese falsa nesta base. O status não é corrigido e nenhuma data de entrega é criada.
+
+A contagem por canal usa só canal reconhecido e inclui todos os status. A contagem por período usa só `data_venda` válida, também com todos os status, no recorte ano-mês. Exclusões aparecem ao lado das contagens. Problema de quantidade ou de preço não tira o pedido dessas contas. As duas contagens são de pedidos registrados. Não são receita nem vendas concluídas.
+
 ## Como executar
 
 É preciso Python 3.12 e a biblioteca Pandas.
