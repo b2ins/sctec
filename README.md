@@ -1,0 +1,3 @@
+Um arquivo de texto explicativo escrito em Markdown no repositório contendo:
+Descrição do Projeto: Explique o problema da Festa em Cena, o objetivo do programa, o significado de uma linha e de quatro colunas à sua escolha. Documente as regras adotadas para textos, valores e datas. Custos e descontos estão no CSV, mas seu uso é opcional.
+Guia de Execução e Resultados: Explique como abrir e executar o projeto, onde colocar o CSV e quais arquivos são necessários. Apresente os resultados, a conclusão sobre entrega sem data e duas descobertas com evidência numérica, interpretação e limitação. Não confunda unidades com pedidos ou a base fictícia com o mercado real.
