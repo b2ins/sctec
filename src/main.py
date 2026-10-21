@@ -2,7 +2,13 @@
 
 import sys
 
-from funcoes import caminho_csv_padrao, ler_csv, selecionar_amostra
+from funcoes import (
+    aplicar_padronizacao_textual,
+    caminho_csv_padrao,
+    ler_csv,
+    resumir_textos,
+    selecionar_amostra,
+)
 
 # Colunas mostradas na amostra. O DataFrame conserva todas as outras.
 COLUNAS_EXIBICAO = [
@@ -48,12 +54,52 @@ def exibir_leitura(dados) -> None:
             print(f"  {coluna}: {valor}")
 
 
+def _entre_colchetes(valor: str) -> str:
+    """Mostra vazio e espaço nas pontas, que o print comum esconderia."""
+    if valor == "":
+        return "[(vazio)]"
+    return f"[{valor}]"
+
+
+def exibir_textos(dados) -> None:
+    """Mostra antes e depois e as contagens separadas de correção."""
+    resumo = resumir_textos(dados)
+    print()
+    print("Padronização de categoria")
+    print(f"  Vazias preenchidas com 'sem categoria': {resumo['vazias_preenchidas']}")
+    print(f"  Não vazias alteradas: {resumo['nao_vazias_alteradas']}")
+    print(f"  Inalteradas: {resumo['inalteradas']}")
+    print(
+        "  Das alteradas, só capitalização ou strip: "
+        f"{resumo['alteradas_so_caixa_ou_strip']}"
+    )
+    print(
+        "  Das alteradas, também pontuação ou espaço interno: "
+        f"{resumo['alteradas_com_pontuacao']}"
+    )
+    print("  Exemplos de antes e depois:")
+    for original, limpa in resumo["exemplos_categoria"]:
+        print(f"    {_entre_colchetes(original)} -> {_entre_colchetes(limpa)}")
+
+    print()
+    print("Padronização de canal")
+    print("  Antes:")
+    for canal, quantidade in resumo["canais_origem"].items():
+        print(f"    {_entre_colchetes(canal)}: {quantidade}")
+    print("  Depois:")
+    for canal, quantidade in resumo["canais_padrao"].items():
+        print(f"    {_entre_colchetes(canal)}: {quantidade}")
+    print(f"  Canais não reconhecidos: {resumo['canais_nao_reconhecidos']}")
+
+
 def main() -> None:
     configurar_saida()
     caminho = caminho_csv_padrao()
     print(f"Arquivo: {caminho}")
     dados = ler_csv(caminho)
     exibir_leitura(dados)
+    dados = aplicar_padronizacao_textual(dados)
+    exibir_textos(dados)
 
 
 if __name__ == "__main__":

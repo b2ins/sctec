@@ -19,7 +19,18 @@ Uma linha não é uma unidade vendida. Os dados são fictícios e contêm erros 
 - `canal_venda`: onde o pedido foi feito. O valor esperado, depois da padronização, é Mercado, Loja física ou Web.
 - `status_pedido`: situação registrada do pedido (Concluído, Cancelado ou Devolvido). O programa não muda esse campo para “corrigir” a base.
 
-As demais colunas (`produto`, `categoria`, `cidade`, `quantidade`, `preco_unitario`, `custo_unitario`, `desconto_pct`, `publico`, `tamanho`, `data_entrega`) permanecem no DataFrame. As regras de texto, número e data são documentadas nas etapas em que passam a valer.
+As demais colunas (`produto`, `categoria`, `cidade`, `quantidade`, `preco_unitario`, `custo_unitario`, `desconto_pct`, `publico`, `tamanho`, `data_entrega`) permanecem no DataFrame. Custo e desconto não entram nas contas.
+
+## Regras de texto
+
+`categoria` passa por `strip()`, `lower()` e `re.sub()`. A regex `[^a-z\s]` remove pontuação e qualquer caractere que não seja letra sem acento ou espaço. Espaços repetidos viram um só. Se o resultado fica vazio, a categoria passa a ser `sem categoria`, em minúsculas, porque a padronização já aplicou `lower()`. O nome do produto não preenche esse vazio.
+
+A contagem trata os dois grupos em separado:
+
+- categoria vazia preenchida: o campo original só tinha espaço ou estava em branco;
+- categoria não vazia alterada: havia texto e o resultado ficou diferente do original.
+
+`canal_venda` também perde espaço nas pontas e espaço repetido. Os únicos valores aceitos depois da regra são `Mercado`, `Loja física` e `Web`. `loja fisica`, sem acento, entra em Loja física. Qualquer outro texto fica sem canal reconhecido e não ganha um nome inventado.
 
 ## Como executar
 
