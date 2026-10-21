@@ -50,13 +50,59 @@ A contagem por canal usa só canal reconhecido e inclui todos os status. A conta
 
 ## Como executar
 
-É preciso Python 3.12 e a biblioteca Pandas.
+É preciso Python 3.12 e Pandas.
 
 ```text
 pip install -r requirements.txt
 python src/main.py
 ```
 
-Os comandos rodam na raiz do repositório. O CSV lido é `data/halloween_vendas.csv`. Além dele, a execução desta etapa usa `src/main.py`, `src/funcoes.py` e `requirements.txt`.
+Os comandos rodam na raiz do repositório. O CSV fica em `data/halloween_vendas.csv`. A execução usa esse arquivo, `src/main.py`, `src/funcoes.py` e `requirements.txt`. Nada é gravado por cima do CSV.
 
-A leitura usa `pd.read_csv` com separador vírgula, `encoding="utf-8"` e todos os campos em texto.
+A leitura usa `pd.read_csv` com separador vírgula, `encoding="utf-8"` e todos os campos em texto. A saída, nesta ordem, mostra o volume e três pedidos, o antes e o depois dos textos, os problemas numéricos, as datas, a hipótese de entrega, as contagens e as duas descobertas.
+
+## Resultados
+
+A execução leu 1.500 linhas. Como `pedido_id` não se repete, são 1.500 pedidos.
+
+Categorias vazias preenchidas com `sem categoria`: 18. Categorias não vazias alteradas: 1.482. Dessas, 1.427 mudaram só por capitalização ou por `strip()`, e 55 também perderam pontuação, como `FANTASIA!!!`. Canais depois da regra: Web 666, Loja física 551 e Mercado 283. Nenhum canal ficou de fora.
+
+Problemas de quantidade: 7, todos com o texto `-1`. Problemas de preço: 12, todos ausentes. Pedidos com falha nos dois campos: 0. Pedidos afetados, pela união: 19. As 1.500 linhas continuam no processamento.
+
+Datas de venda inválidas: 4, com o texto `data_invalida`. Elas não foram trocadas pela data de hoje. Cancelados: 109.
+
+### Entrega sem data
+
+A hipótese é falsa nesta base. Há 109 pedidos sem entrega e cancelados, e 34 sem entrega com outro status, todos `Concluído`. Os três primeiros contraexemplos são os pedidos 1170, 990 e 740. Nenhum cancelado tem data de entrega, mas o caminho inverso não fecha: falta de data não identifica sozinha um cancelamento, porque também aparece em pedido concluído. Status e data de entrega não foram alterados.
+
+### Descoberta por canal
+
+Web registra 666 de 1.500 pedidos com canal reconhecido (44,4%), à frente de Loja física (551) e Mercado (283). Web reúne 70 dos 109 cancelamentos (64,2%). A taxa é 10,5% na Web, 5,6% na Loja física e 2,8% no Mercado. Leitura: o site concentra pedidos registrados e cancelamentos. A conta não é receita nem venda concluída, e não usa `quantidade` como se cada unidade fosse um pedido. Limite: a base é fictícia; zero pedidos saíram por canal não reconhecido; a taxa usa o status informado e não explica o motivo do cancelamento.
+
+### Descoberta por período
+
+Outubro é o pico nos dois anos. Em 2024, outubro tem 393 pedidos e agosto tem 77 (5,1 vezes). Em 2025, outubro tem 410 e agosto tem 62 (6,6 vezes). Os dois outubros somam 803 dos 1.496 pedidos com data válida (53,7%). O restante com data válida fica em 2024-08 (77), 2024-09 (104), 2024-11 (174), 2025-08 (62), 2025-09 (94) e 2025-11 (182). Leitura: o mês do Halloween concentra os pedidos registrados, e o pico de 2025 fica pouco acima do de 2024. A conta não é receita nem venda concluída, e o mês inteiro não se resume ao dia 31. Limite: a base é fictícia; o recorte é ano-mês para 2024 e 2025 não se misturarem; 4 datas inválidas ficaram de fora.
+
+## Qualidade dos dados e Machine Learning
+
+Antes de interpretar a tabela ou levá-la a um modelo, é preciso ver o que está ausente, escrito de formas diferentes ou com data inválida. Esses defeitos mudam as contagens e mudariam o que o modelo aprenderia. Preencher a categoria com o nome do produto, trocar preço vazio por zero ou trocar `data_invalida` pela data de hoje inventaria sinal.
+
+A limpeza não evita, sozinha, overfitting nem underfitting. Também pesam a representatividade da amostra, a escolha do modelo e a forma de avaliá-lo. Este CSV é fictício e foi sujo de propósito. A frequência de outubro ou da Web não estima o mercado real de Halloween. O projeto para na preparação e na exploração. As regras acima fazem parte do resultado, porque definem o que um modelo posterior teria permissão de ver.
+
+A base não traz dimensões físicas. Os campos numéricos pedidos pelo enunciado são `quantidade` e `preco_unitario`.
+
+## Branches
+
+Cada sprint foi uma branch e entrou em `main` por fast-forward.
+
+- `sprint-1-ingestao`: ler o CSV, conferir 1.500 linhas e registrar o que é um pedido.
+- `sprint-2-strings`: limpar categoria com `strip()`, `lower()` e `re.sub()`, e padronizar o canal.
+- `sprint-3-validacao`: marcar quantidade e preço inválidos sem imputar valor.
+- `sprint-4-regras-datas`: converter `data_venda`, testar a hipótese da entrega e contar canal e ano-mês.
+- `sprint-5-relatorio`: fechar este README e o `report.md`.
+
+O arquivo `report.md` repete a leitura em formato de relatório. A contagem conferida com `len()` em Python, no arquivo UTF-8 e incluindo espaços, é 2.588 caracteres. Sem as quebras de linha, são 2.573. Os dois valores ficam entre 1.500 e 3.000.
+
+O vídeo de 5 a 7 minutos é outra entrega, no AVA. Este repositório não o contém.
+
+Um passo posterior, fora deste escopo, seria revisar com quem registrou os pedidos os 34 concluídos sem data de entrega, antes de usar a tabela em um modelo. Custo e desconto continuam sem uso. Não há gráfico nem teste automatizado além de executar `src/main.py`.
