@@ -102,7 +102,3 @@ Cada sprint foi uma branch e entrou em `main` por fast-forward.
 - `sprint-5-relatorio`: fechar este README e o `report.md`.
 
 O arquivo `report.md` repete a leitura em formato de relatório. A contagem conferida com `len()` em Python, no arquivo UTF-8 e incluindo espaços, é 2.588 caracteres. Sem as quebras de linha, são 2.573. Os dois valores ficam entre 1.500 e 3.000.
-
-O vídeo de 5 a 7 minutos é outra entrega, no AVA. Este repositório não o contém.
-
-Um passo posterior, fora deste escopo, seria revisar com quem registrou os pedidos os 34 concluídos sem data de entrega, antes de usar a tabela em um modelo. Custo e desconto continuam sem uso. Não há gráfico nem teste automatizado além de executar `src/main.py`.
