@@ -100,5 +100,3 @@ Cada sprint foi uma branch e entrou em `main` por fast-forward.
 - `sprint-3-validacao`: marcar quantidade e preço inválidos sem imputar valor.
 - `sprint-4-regras-datas`: converter `data_venda`, testar a hipótese da entrega e contar canal e ano-mês.
 - `sprint-5-relatorio`: fechar este README e o `report.md`.
-
-O arquivo `report.md` repete a leitura em formato de relatório. A contagem conferida com `len()` em Python, no arquivo UTF-8 e incluindo espaços, é 2.588 caracteres. Sem as quebras de linha, são 2.573. Os dois valores ficam entre 1.500 e 3.000.
